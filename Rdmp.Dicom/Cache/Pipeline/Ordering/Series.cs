@@ -5,7 +5,6 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 {
     class Series
     {
-        public readonly PlacementMode PlacementMode;
         public readonly IDataLoadEventListener Listener;
         
         private bool _filled;
@@ -14,10 +13,9 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         public string SeriesInstanceUID { get; private set; }
         public Dictionary<string, Image> Images { get; private set; }
 
-        public Series(string seriesUid, string sopInstance, PlacementMode placementMode, IDataLoadEventListener listener)
+        public Series(string seriesUid, string sopInstance, IDataLoadEventListener listener)
         {
             Images = new Dictionary<string, Image>();
-            PlacementMode = placementMode;
             Listener = listener;
             SeriesInstanceUID = seriesUid;
             Add(sopInstance);
@@ -41,12 +39,8 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         {
             if (!Images.ContainsKey(sopInstance))
             {
-                if (PlacementMode == PlacementMode.PlaceThenFill)
-                {
-                    Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + sopInstance));
-                    return;
-                }
-                Images.Add(sopInstance, new Image(sopInstance));
+                Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + sopInstance));
+                return;
             }
             Images[sopInstance].Fill();
         }

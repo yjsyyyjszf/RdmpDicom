@@ -114,7 +114,7 @@ namespace Rdmp.Dicom.Cache.Pipeline
                 Layout = cacheLayout
             };
             //            IOrder order = new ItemsBasedOrder(dateFrom, dateTo, PlacementMode.PlaceThenFill,OrderLevel, listener);
-            IOrder order = new HierarchyBasedOrder(dateFrom, dateTo, PlacementMode.PlaceThenFill, OrderLevel, listener);
+            IOrder order = new HierarchyBasedOrder(dateFrom, dateTo,  OrderLevel, listener);
             IPicker picker = null;
             var pickerFilled = false;
             var transferTimeOutTimer = new Timer(dicomConfiguration.TransferTimeOutInMilliseconds);

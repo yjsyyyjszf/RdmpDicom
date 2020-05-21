@@ -9,7 +9,6 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
     class ItemsBasedOrder : IOrder
     {
         private readonly Object _oPickersLock = new Object();
-        public readonly PlacementMode PlacementMode;
         public readonly OrderLevel OrderLevel;
         public readonly IDataLoadEventListener Listener;
         private readonly SortedDictionary<string, Item> _items = new SortedDictionary<string, Item>();
@@ -17,11 +16,10 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         private readonly DateTime _dateTo;
         private Queue<ItemsBasedPicker> _pickers;
 
-        public ItemsBasedOrder(DateTime dateFrom, DateTime dateTo, PlacementMode placementMode, OrderLevel orderLevel, IDataLoadEventListener listener)
+        public ItemsBasedOrder(DateTime dateFrom, DateTime dateTo, OrderLevel orderLevel, IDataLoadEventListener listener)
         {
             _dateFrom = dateFrom;
             _dateTo = dateTo;
-            PlacementMode = placementMode;
             OrderLevel = orderLevel;
             Listener = listener;
         }
@@ -30,7 +28,6 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         {
             _dateFrom = order._dateFrom;
             _dateTo = order._dateTo;
-            PlacementMode = order.PlacementMode;
             OrderLevel = order.OrderLevel;
             Listener = order.Listener;
         }
@@ -59,12 +56,8 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
             var key = Item.MakeItemKey(patId, studyUid, seriesUid, sopInstance);
             if (!_items.ContainsKey(key))
             {
-                if (PlacementMode == PlacementMode.PlaceThenFill)
-                {
-                    Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + patId + "-" + studyUid + "-" + seriesUid + "-" + sopInstance));
-                    return;
-                }
-                _items[key] = new Item(patId, studyUid, seriesUid, sopInstance);
+                Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + patId + "-" + studyUid + "-" + seriesUid + "-" + sopInstance));
+                return;
             }
             _items[key].Fill();
         }

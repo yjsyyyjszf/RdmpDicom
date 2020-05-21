@@ -5,18 +5,16 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 {
     class Patient
     {
-        public readonly PlacementMode PlacementMode;
         public readonly IDataLoadEventListener Listener;
         public string PatientId { get; private set; }
         public Dictionary<string, Study> Studies { get; private set; }
         private bool _filled;
         private bool _requested;
 
-        public Patient(string patId, string studyUid, string seriesUid, string sopInstance, PlacementMode placementMode, IDataLoadEventListener listener)
+        public Patient(string patId, string studyUid, string seriesUid, string sopInstance,  IDataLoadEventListener listener)
         {
             Studies = new Dictionary<string, Study>();
             PatientId = patId;
-            PlacementMode = placementMode;
             Listener = listener;
             Add(studyUid, seriesUid, sopInstance);
         }
@@ -30,19 +28,15 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
             }
             else
             {
-                Studies.Add(studyUid, new Study(studyUid, seriesUid, sopInstance, PlacementMode,Listener));
+                Studies.Add(studyUid, new Study(studyUid, seriesUid, sopInstance, Listener));
             }
         }
 
         public void Fill(string studyUid, string seriesUid, string sopInstance) { 
             if (!Studies.ContainsKey(studyUid))
             {
-                if (PlacementMode == PlacementMode.PlaceThenFill)
-                {
-                    Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + studyUid + "-" + seriesUid + "-" + sopInstance));
-                    return;
-                }
-                Studies.Add(studyUid, new Study(studyUid, seriesUid, sopInstance, PlacementMode,Listener));
+                Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + studyUid + "-" + seriesUid + "-" + sopInstance));
+                return;
             }
             Studies[studyUid].Fill(seriesUid, sopInstance);
         }

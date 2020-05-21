@@ -6,7 +6,6 @@ using ReusableLibraryCode.Progress;
 
 namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 {
-    public enum PlacementMode { PlaceThenFill, PlaceAndFill };
     public enum OrderLevel { Patient, Study, Series, Image };
 
     class HierarchyBasedOrder : IOrder
@@ -14,7 +13,6 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 
         //TODO make interfaces for items Add and Fill
         private readonly Object _oPickersLock = new Object();
-        public readonly PlacementMode PlacementMode;
         public readonly OrderLevel OrderLevel;
         public readonly IDataLoadEventListener Listener;
         private readonly Dictionary<string, Patient> _patients = new Dictionary<string, Patient>();
@@ -27,17 +25,15 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         {
             _dateFrom = order._dateFrom;
             _dateTo = order._dateTo;
-            PlacementMode = order.PlacementMode;
             OrderLevel = order.OrderLevel;
             Listener = order.Listener;
             parent = order;
         }
 
-        public HierarchyBasedOrder(DateTime dateFrom, DateTime dateTo, PlacementMode placementMode, OrderLevel orderLevel, IDataLoadEventListener listener)
+        public HierarchyBasedOrder(DateTime dateFrom, DateTime dateTo, OrderLevel orderLevel, IDataLoadEventListener listener)
         {
             _dateFrom = dateFrom;
             _dateTo = dateTo;
-            PlacementMode = placementMode;
             OrderLevel = orderLevel;
             Listener = listener;
             parent = null;
@@ -183,7 +179,7 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
             }
             else
             {
-                _patients.Add(patId, new Patient(patId,studyUid, seriesUid, sopInstance, PlacementMode,Listener));
+                _patients.Add(patId, new Patient(patId,studyUid, seriesUid, sopInstance, Listener));
             }
         }
 
@@ -196,13 +192,8 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         {
             if (!_patients.ContainsKey(patId))
             {
-                if (PlacementMode == PlacementMode.PlaceThenFill)
-                {
-                    Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + patId + "-" + studyUid + "-" + seriesUid + "-" + sopInstance));
-                    return;
-                }
-                _patients.Add(patId, new Patient(patId, studyUid, seriesUid, sopInstance, PlacementMode, Listener));
-                if(parent != null) parent._patients.Add(patId, new Patient(patId, studyUid, seriesUid, sopInstance, PlacementMode, Listener));
+                Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + patId + "-" + studyUid + "-" + seriesUid + "-" + sopInstance));
+                return;
             }
             _patients[patId].Fill(studyUid, seriesUid, sopInstance);
         }

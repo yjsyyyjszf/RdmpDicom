@@ -5,7 +5,6 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 {
     class Study
     {
-        public readonly PlacementMode PlacementMode;
         public readonly IDataLoadEventListener Listener;
         public string StudyInstanceUID { get; private set; }
         private bool _filled;
@@ -13,11 +12,10 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 
         public Dictionary<string, Series> Series = new Dictionary<string, Series>();
 
-        public Study(string studyUid, string seriesUid, string sopInstance, PlacementMode placementMode, IDataLoadEventListener listener)
+        public Study(string studyUid, string seriesUid, string sopInstance,  IDataLoadEventListener listener)
         {
             Series = new Dictionary<string, Series>();
             StudyInstanceUID = studyUid;
-            PlacementMode = placementMode;
             Listener = listener;
             Add(seriesUid, sopInstance);
         }
@@ -31,7 +29,7 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
             }
             else
             {
-                Series.Add(seriesUid, new Series(seriesUid, sopInstance, PlacementMode,  Listener));
+                Series.Add(seriesUid, new Series(seriesUid, sopInstance, Listener));
             }
         }
 
@@ -39,12 +37,8 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         {
             if (!Series.ContainsKey(seriesUid))
             {
-                if (PlacementMode == PlacementMode.PlaceThenFill)
-                {
-                    Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + seriesUid + "-" + sopInstance));
-                    return;
-                }
-                Series.Add(seriesUid, new Series(seriesUid, sopInstance, PlacementMode,  Listener));
+               Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + seriesUid + "-" + sopInstance));
+                return;
             }
             Series[seriesUid].Fill(sopInstance);
         }
