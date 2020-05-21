@@ -6,7 +6,6 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
     class Study
     {
         public readonly PlacementMode PlacementMode;
-        public readonly OrderLevel OrderLevel;
         public readonly IDataLoadEventListener Listener;
         public string StudyInstanceUID { get; private set; }
         private bool _filled;
@@ -14,12 +13,11 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 
         public Dictionary<string, Series> Series = new Dictionary<string, Series>();
 
-        public Study(string studyUid, string seriesUid, string sopInstance, PlacementMode placementMode, OrderLevel orderLevel, IDataLoadEventListener listener)
+        public Study(string studyUid, string seriesUid, string sopInstance, PlacementMode placementMode, IDataLoadEventListener listener)
         {
             Series = new Dictionary<string, Series>();
             StudyInstanceUID = studyUid;
             PlacementMode = placementMode;
-            OrderLevel = orderLevel;
             Listener = listener;
             Add(seriesUid, sopInstance);
         }
@@ -33,7 +31,7 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
             }
             else
             {
-                Series.Add(seriesUid, new Series(seriesUid, sopInstance, PlacementMode, OrderLevel, Listener));
+                Series.Add(seriesUid, new Series(seriesUid, sopInstance, PlacementMode,  Listener));
             }
         }
 
@@ -46,7 +44,7 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
                     Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Error, "DicomRetriever.Order.Order Attempt to fill order prior to placement" + seriesUid + "-" + sopInstance));
                     return;
                 }
-                Series.Add(seriesUid, new Series(seriesUid, sopInstance, PlacementMode, OrderLevel, Listener));
+                Series.Add(seriesUid, new Series(seriesUid, sopInstance, PlacementMode,  Listener));
             }
             Series[seriesUid].Fill(sopInstance);
         }

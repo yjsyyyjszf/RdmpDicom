@@ -2,20 +2,16 @@
 {
     class Image
     {
-        public readonly PlacementMode PlacementMode;
-        public readonly OrderLevel OrderLevel;
-        public string SOPInstanceUID { get;private set; }
+        public string SOPInstanceUID { get; }
         
         public bool IsFilled { get; private set; }
         public bool IsRequested { get; private set; }
 
-        public Image(string sopInstance, PlacementMode placementMode = PlacementMode.PlaceThenFill, OrderLevel orderLevel = OrderLevel.Series)
+        public Image(string sopInstance)
         {
             IsFilled = false;
             IsRequested = false;
             SOPInstanceUID = sopInstance;
-            PlacementMode = placementMode;
-            OrderLevel = orderLevel;
         }
 
         public void Fill()
