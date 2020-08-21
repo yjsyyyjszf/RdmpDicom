@@ -6,7 +6,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added new command `CompareImagingSchemas` accessible from the Catalogue right click context menu.  The command shows differences between a live database table and the template used to create it.
+- Added new command `AddTag` which adds a given dicom tag or typed column to the provided Catalogue (change is synced with RDMP and any `_Archive` tables)
+
+## [2.1.7] 2020-08-17
+
+### Fixed
+
+- Allow the PACS to send us lossy compressed versions if it wants, otherwise we won't be able to receive anything it has in that format
+
+### Added
+
+- Accept video (MPEG/HEVC) content if the PACS offers it
+- Added new cache source `ProcessBasedCacheSource` that calls out to a remote process
+
+## [2.1.6] 2020-06-17
+
+### Fixed
+
+- Fixed logging exception during C-MOVE retries
+
+## [2.1.5] 2020-06-03
+
+### Added
+
+- Single retry when ordering a C-MOVE fails
+
+### Fixed
+
+- Fixed issue with failed store requests hanging ordering
+
+## [2.1.4] 2020-05-26
+
+- Bugfix: respond correctly to far-end association release requests in CachingSCP
+- Revert 2.1.3's temporary workaround for the above issue
+
+## [2.1.3] 2020-05-21
+
+### Added
+
 - Add condition variable for CachingSCP to alert PACSSource when transfer completes
+- Added version number logging of plugin and fo-dicom
 
 ## [2.1.2] 2020-05-18
 
@@ -160,8 +202,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial commit from private repo
 
-[Unreleased]: https://github.com/HicServices/RdmpDicom/compare/v2.1.2...develop
-[2.1.1]: https://github.com/HicServices/RdmpDicom/compare/v2.1.1...v2.1.2
+[Unreleased]: https://github.com/HicServices/RdmpDicom/compare/v2.1.7...develop
+[2.1.7]: https://github.com/HicServices/RdmpDicom/compare/v2.1.6...v2.1.7
+[2.1.6]: https://github.com/HicServices/RdmpDicom/compare/v2.1.5...v2.1.6
+[2.1.5]: https://github.com/HicServices/RdmpDicom/compare/v2.1.4...v2.1.5
+[2.1.4]: https://github.com/HicServices/RdmpDicom/compare/v2.1.3...v2.1.4
+[2.1.3]: https://github.com/HicServices/RdmpDicom/compare/v2.1.2...v2.1.3
+[2.1.2]: https://github.com/HicServices/RdmpDicom/compare/v2.1.1...v2.1.2
 [2.1.1]: https://github.com/HicServices/RdmpDicom/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/HicServices/RdmpDicom/compare/v2.0.9...v2.1.0
 [2.0.9]: https://github.com/HicServices/RdmpDicom/compare/v2.0.8...v2.0.9

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ReusableLibraryCode.Progress;
+using System.Collections.Concurrent;
 
 namespace Rdmp.Dicom.Cache.Pipeline.Ordering
 {
@@ -20,6 +21,9 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
         private readonly DateTime _dateTo;
         private readonly HierarchyBasedOrder parent;
         private Queue<HierarchyBasedPicker> _pickers;
+        private readonly ConcurrentDictionary<Item,int> _retried = new ConcurrentDictionary<Item,int>();
+
+        public const int MaxAttempts = 2;
 
         public HierarchyBasedOrder(HierarchyBasedOrder order)
         {
@@ -51,6 +55,15 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
             }
         }
 
+        /// <summary>
+        /// Returns a count of how often we have attempted to fetch the given <paramref name="lastRequested"/> via CMove
+        /// </summary>
+        /// <param name="lastRequested"></param>
+        /// <returns></returns>
+        public int GetAttemptCount(Item lastRequested)
+        {
+            return _retried.GetOrAdd(lastRequested ,1);
+        }
 
         public bool HasNextPicker()
         {
@@ -74,6 +87,31 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
                 }
             }
 
+        }
+
+        internal void Retry(Item item)
+        {
+            if (parent is null)
+            {                
+                var attempts = _retried.AddOrUpdate(item ,(k)=>2,(k,v)=>v++);
+
+                if(attempts > MaxAttempts)
+                    return;
+                
+                HierarchyBasedOrder order = null;
+                HierarchyBasedPicker picker = null;
+                order = new HierarchyBasedOrder(this);
+                picker = new HierarchyBasedPicker(order);
+                order.Place(item);
+
+                var items = _pickers.ToArray();
+                _pickers.Clear();
+                _pickers.Enqueue(picker);
+                foreach (var p in items)
+                    _pickers.Enqueue(p);
+            }
+            else
+                parent.Retry(item);
         }
 
         //TODO Non-Elegant
@@ -364,10 +402,7 @@ namespace Rdmp.Dicom.Cache.Pipeline.Ordering
                 {
                     foreach (var series in study.Series.Values)
                     {
-                        foreach (var image in series.Images.Values)
-                        {
-                            count++;
-                        }
+                        count += series.Images.Values.Count;
                     }
                 }
             }

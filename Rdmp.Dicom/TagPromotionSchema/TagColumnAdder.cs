@@ -13,7 +13,7 @@ using Rdmp.Core.Curation;
 
 namespace Rdmp.Dicom.TagPromotionSchema
 {
-    public class TagColumnAdder: BasicCommandExecution,ICheckable
+    public class TagColumnAdder: ICheckable
     {
         /// <summary>
         /// The new tag (or transform column) the user wants to add to the table
@@ -31,23 +31,19 @@ namespace Rdmp.Dicom.TagPromotionSchema
         private readonly TableInfo _tableInfo;
 
         private readonly ICheckNotifier _notifierForExecute;
-        private readonly bool _includeLoadedField;
 
-        public TagColumnAdder(string tagName, string datatype, TableInfo table, ICheckNotifier notifierForExecute, bool includeLoadedField=false)
+        public TagColumnAdder(string tagName, string datatype, TableInfo table, ICheckNotifier notifierForExecute)
         {
             _tagName = tagName;
             _datatype = datatype;
             _tableInfo = table;
             _notifierForExecute = notifierForExecute;
-            _includeLoadedField = includeLoadedField;
         }
 
         public bool SkipChecksAndSynchronization { get; set; }
 
-        public override void Execute()
+        public void Execute()
         {
-            base.Execute();
-
             if(!SkipChecksAndSynchronization)
                 Check(_notifierForExecute);
 
@@ -64,14 +60,6 @@ namespace Rdmp.Dicom.TagPromotionSchema
 
                 if (archiveTable.Exists())
                     archiveTable.AddColumn(_tagName, _datatype, true, DatabaseCommandHelper.GlobalTimeout);
-
-                if (_includeLoadedField)
-                {
-                    table.AddColumn(_tagName + "_Loaded", TagLoadedColumnPair.LoadedColumnDataType, true, DatabaseCommandHelper.GlobalTimeout);
-                    
-                    if (archiveTable.Exists())
-                        archiveTable.AddColumn(_tagName + "_Loaded", TagLoadedColumnPair.LoadedColumnDataType, true, DatabaseCommandHelper.GlobalTimeout);
-                }
             }
 
             if (!SkipChecksAndSynchronization)
@@ -93,7 +81,7 @@ namespace Rdmp.Dicom.TagPromotionSchema
             try
             {
                 var cSharpType = db.Server.GetQuerySyntaxHelper().TypeTranslater.GetCSharpTypeForSQLDBType(_datatype);
-                notifier.OnCheckPerformed(new CheckEventArgs("Datatype is compatible with TypeTranslater",CheckResult.Success));
+                notifier.OnCheckPerformed(new CheckEventArgs($"Datatype { _datatype } is compatible with TypeTranslater as { cSharpType }",CheckResult.Success));
             }
             catch (Exception ex)
             {

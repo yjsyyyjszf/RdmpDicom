@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using ReusableLibraryCode.Progress;
 using Rdmp.Core.Logging;
-using System.Threading;
 
 namespace Rdmp.Dicom.Cache.Pipeline
 {
@@ -28,6 +27,23 @@ namespace Rdmp.Dicom.Cache.Pipeline
             DicomTransferSyntax.JPEGProcess14SV1,
             DicomTransferSyntax.JPEGProcess14,
             DicomTransferSyntax.RLELossless,
+
+            // Lossy - if that's all the PACS has, that's all it can give us
+            DicomTransferSyntax.JPEGLSNearLossless,
+            DicomTransferSyntax.JPEG2000Lossy,
+            DicomTransferSyntax.JPEGProcess1,
+            DicomTransferSyntax.JPEGProcess2_4,
+
+            // Also allow video files, just in case
+            DicomTransferSyntax.HEVCH265Main10ProfileLevel51,
+            DicomTransferSyntax.HEVCH265MainProfileLevel51,
+            DicomTransferSyntax.MPEG2,
+            DicomTransferSyntax.MPEG2MainProfileHighLevel,
+            DicomTransferSyntax.MPEG4AVCH264BDCompatibleHighProfileLevel41,
+            DicomTransferSyntax.MPEG4AVCH264HighProfileLevel41,
+            DicomTransferSyntax.MPEG4AVCH264HighProfileLevel42For2DVideo,
+            DicomTransferSyntax.MPEG4AVCH264HighProfileLevel42For3DVideo,
+            DicomTransferSyntax.MPEG4AVCH264StereoHighProfileLevel42,
 			
             // Uncompressed
             DicomTransferSyntax.ExplicitVRLittleEndian,
@@ -42,9 +58,6 @@ namespace Rdmp.Dicom.Cache.Pipeline
         public static Action<DicomCStoreRequest, DicomCStoreResponse> OnEndProcessingCStoreRequest;
         private String CalledAE = String.Empty;
         private String CallingAE = String.Empty;
-
-        public static Boolean pending = false;
-        public static readonly object locker = new object();
 
         public CachingSCP(INetworkStream stream, Encoding encoding, Logger logger): base(stream, encoding, logger)
         {
@@ -65,7 +78,7 @@ namespace Rdmp.Dicom.Cache.Pipeline
         public Task OnReceiveAssociationReleaseRequestAsync()
         {
             OnReceiveAssociationReleaseRequest();
-            return SendAssociationReleaseRequestAsync();
+            return SendAssociationReleaseResponseAsync();
         }
         #endregion
 
@@ -156,11 +169,6 @@ namespace Rdmp.Dicom.Cache.Pipeline
         #region OnReceiveAssociationReleaseRequest
         public void OnReceiveAssociationReleaseRequest()
         {
-            lock(locker)
-            {
-                pending = false;
-                Monitor.PulseAll(locker);
-            }
             Listener.OnNotify(this, new NotifyEventArgs(ProgressEventType.Trace, "Released Association from " + CallingAE + " to " + CalledAE));
         }
         #endregion
@@ -169,3 +177,4 @@ namespace Rdmp.Dicom.Cache.Pipeline
 
     }
 }
+
